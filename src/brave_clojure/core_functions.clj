@@ -153,3 +153,65 @@
 
 (take 5 (repeatedly (fn [] (rand-int 10)))) 
 ;; will print a random number 5 times within the range of 0..10
+
+(comment
+  "collection functions to play around with the entire
+   data structure instead of focusing on an individual
+   seq."
+  )
+;; into
+(map identity {:name "foo"}) ;; => ([:name "foo"])
+(into {} (map identity {:name "foo"})) ;; => {:name "foo"}
+;; this converts the ds back to a map.
+;; similarly
+(map identity [:name :age :address]) ;; => (:name :age :address)
+(into [] (map identity [:name :age :address])) ;; => [:name :age :address]
+;; into's first arguement needn't be empty
+(into #{:a :b} (map identity [:a :b :c :d])) ;; => #{:c :d :b :a}
+
+;; conj
+(conj [0] [1]) ;; => [0 [1]]
+;; or to replicate into's functionality
+(conj [0] 1) ;; => [0 1]
+;; or
+(conj [-1] 0 1 2 3 :foo) ;; => [-1 0 2 3 :foo]
+
+(comment
+  "Functions that take in a function and return a function.")
+;; apply
+(comment
+  "apply explodes a seq to be passed in to a function."
+  )
+(max -1 2 7) ;; => 7
+(max [0 1 2]) ;; => [0 1 2]
+(apply max [0 1 2]) ;; => 2
+
+;; partial
+(comment
+  "partial takes a function and any no of arguements to return a function.
+   When calling the new function, it calls the original function with the
+   original args along with the new args."
+  )
+(def add3 (partial + 3))
+(add3 4) ;; => 7
+
+(def add-details
+  (partial conj [:name :age :role :employee_id]))
+(add-details :manager :doj) ;; => [:name :age :role :employee_id :manager :doj]
+
+;; a more succinct example
+(defn lousy-logger
+  [log-level message]
+  (condp = log-level
+    :warn (clojure.string/lower-case message)
+    :error (clojure.string/upper-case message)))
+
+(def warn (partial lousy-logger :warn))
+(warn "watch out!") ;; => "watch out!"
+(def error (partial lousy-logger :error))
+(error "undefined exception!") ;; => "UNDEFINED EXCEPTION!"
+
+;; complement
+(def not-empty? (complement empty?))
+(not-empty? [1]) ;; => true
+(not-empty? '()) ;; => false
